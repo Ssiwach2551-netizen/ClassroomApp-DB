@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการห้องเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- หน้า Login -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-blue-50">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-96">
+            <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">เข้าสู่ระบบห้องเรียน</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">เลขประจำตัวนักเรียน</label>
+                    <input type="text" id="studentId" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" placeholder="เช่น 12345">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">รหัสผ่าน</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" placeholder="รหัสผ่านของคุณ">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                    เข้าสู่ระบบ
+                </button>
+                <p id="loginError" class="text-red-500 text-sm text-center hidden">รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าหลักของแอป (จะโชว์หลัง Login สำเร็จ) -->
+    <div id="appPage" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <!-- Sidebar Menu -->
+        <aside class="w-full md:w-64 bg-white shadow-md flex-shrink-0">
+            <div class="p-6 border-b flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold text-blue-800">Classroom</h1>
+                    <p id="userProfile" class="text-sm text-gray-500"></p>
+                </div>
+                <span id="roleBadge" class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700"></span>
+            </div>
+            <nav class="p-4 space-y-2">
+                <a href="#" onclick="showSection('home')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-home w-6"></i> หน้าหลัก</a>
+                <a href="#" onclick="showSection('seating')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-th w-6"></i> ผังที่นั่ง</a>
+                <a href="#" onclick="showSection('finance')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-money-bill-wave w-6"></i> จ่าย/ตรวจสอบเงิน</a>
+                <a href="#" onclick="showSection('withdraw')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-hand-holding-usd w-6"></i> เบิกเงิน</a>
+                <a href="#" onclick="showSection('tasks')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-book w-6"></i> งานและสอบ</a>
+                <a href="#" onclick="showSection('settings')" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg"><i class="fas fa-cog w-6"></i> ตั้งค่าส่วนตัว</a>
+                <hr>
+                <a href="#" onclick="logout()" class="block px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg"><i class="fas fa-sign-out-alt w-6"></i> ออกจากระบบ</a>
+            </nav>
+        </aside>
+
+        <!-- พื้นที่แสดงเนื้อหาหลัก -->
+        <main class="flex-1 p-8">
+            
+            <!-- Section: หน้าหลัก -->
+            <div id="section-home" class="content-section">
+                <h2 class="text-2xl font-bold mb-4">หน้าหลัก</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <p>ยินดีต้อนรับเข้าสู่ระบบจัดการห้องเรียน</p>
+                    <p class="text-gray-500 mt-2">เลือกเมนูด้านซ้ายเพื่อเริ่มต้นใช้งาน</p>
+                </div>
+            </div>
+
+            <!-- Section: ผังที่นั่ง -->
+            <div id="section-seating" class="content-section hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">ผังที่นั่ง (37 คน)</h2>
+                    <!-- ปุ่มนี้จะโชว์เฉพาะ Admin -->
+                    <button id="adminEditSeatBtn" class="hidden bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                        <i class="fas fa-edit"></i> แอดมิน: จัดที่นั่ง
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="mb-4">
+                        <label class="font-bold">เลือกวิชา:</label>
+                        <select class="border p-2 rounded ml-2">
+                            <option>คณิตศาสตร์</option>
+                            <option>ภาษาไทย</option>
+                            <option>ภาษาอังกฤษ</option>
+                        </select>
+                    </div>
+                    <!-- จำลองที่นั่ง -->
+                    <div class="grid grid-cols-6 gap-4 bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
+                        <!-- แถวหน้ากระดาน -->
+                        <div class="col-span-6 text-center py-2 bg-gray-200 font-bold mb-4 rounded">หน้ากระดาน</div>
+                        
+                        <!-- ตัวอย่างที่นั่ง (ในของจริงจะใช้ JS Gen วนลูป 37 คน) -->
+                        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-blue-500">
+                            <div class="text-xs text-gray-500">เลขที่ 1</div>
+                            <div class="font-bold">สมชาย</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-blue-500">
+                            <div class="text-xs text-gray-500">เลขที่ 2</div>
+                            <div class="font-bold">สมหญิง</div>
+                        </div>
+                        <!-- ... ที่นั่งอื่นๆ ... -->
+                        <div class="col-span-4 flex items-center justify-center text-gray-400">
+                            (พื้นที่จำลองผังที่นั่ง - ในระบบจริงจะสามารถลากวางได้สำหรับแอดมิน)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section อื่นๆ ทำเป็นโครงไว้ก่อน -->
+            <div id="section-tasks" class="content-section hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">งานและการสอบที่กำลังจะมาถึง</h2>
+                    <button id="adminAddTaskBtn" class="hidden bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        + แอดมิน: เพิ่มงาน/สอบ
+                    </button>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-4">วันที่</th>
+                                <th class="p-4">วิชา</th>
+                                <th class="p-4">ประเภท</th>
+                                <th class="p-4">รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-4">15 ต.ค. 2026</td>
+                                <td class="p-4">คณิตศาสตร์</td>
+                                <td class="p-4"><span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">สอบเก็บคะแนน</span></td>
+                                <td class="p-4">บทที่ 1-2</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-4">18 ต.ค. 2026</td>
+                                <td class="p-4">ภาษาไทย</td>
+                                <td class="p-4"><span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm">การบ้าน</span></td>
+                                <td class="p-4">รายงานเรื่องวรรณคดี</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // *** สำคัญ: นำ URL ของ Web App จาก Google Apps Script มาใส่ตรงนี้ ***
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwaF2If1rT6fO1wGiTwgmU_MnkMchvkuwOaVVGpTStnOo_UwmKXftyvBoFZEZFP_C96Q/exec';
+        
+        let currentUser = null;
+
+        async function handleLogin() {
+            const studentId = document.getElementById('studentId').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('loginError');
+
+            if(!studentId || !password) return;
+
+            // ในกรณีที่ยังไม่ได้ต่อ GAS URL จริง (เพื่อทดสอบ UI)
+            if(GAS_URL === 'YOUR_GOOGLE_SCRIPT_URL_HERE') {
+                // จำลองการเข้าสู่ระบบเพื่อดู UI ไปก่อน
+                if(studentId === 'admin') {
+                    loginSuccess({ studentId: '000', nickname: 'ผู้ดูแลระบบ', role: 'admin' });
+                } else {
+                    loginSuccess({ studentId: studentId, nickname: 'เพื่อนในห้อง', role: 'student' });
+                }
+                return;
+            }
+
+            try {
+                // เรียก API ของ Google Sheets
+                let response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', studentId: studentId, password: password })
+                });
+                let result = await response.json();
+
+                if(result.success) {
+                    loginSuccess(result.user);
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+            }
+        }
+
+        function loginSuccess(user) {
+            currentUser = user;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('appPage').classList.remove('hidden');
+            
+            // อัปเดตข้อมูลโปรไฟล์
+            document.getElementById('userProfile').innerText = `${user.nickname} (เลขที่: ${user.studentId})`;
+            
+            // จัดการสิทธิ์การมองเห็น (Admin vs Student)
+            const roleBadge = document.getElementById('roleBadge');
+            if(user.role === 'admin') {
+                roleBadge.innerText = 'Admin';
+                roleBadge.classList.add('bg-red-100', 'text-red-700');
+                // เปิดปุ่มเฉพาะแอดมิน
+                document.getElementById('adminEditSeatBtn').classList.remove('hidden');
+                document.getElementById('adminAddTaskBtn').classList.remove('hidden');
+            } else {
+                roleBadge.innerText = 'Student';
+                roleBadge.classList.add('bg-blue-100', 'text-blue-700');
+                // ซ่อนปุ่มแอดมิน
+                document.getElementById('adminEditSeatBtn').classList.add('hidden');
+                document.getElementById('adminAddTaskBtn').classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('studentId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            
+            document.getElementById('appPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+        }
+
+        function showSection(sectionId) {
+            // ซ่อนทุกหน้า
+            document.querySelectorAll('.content-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // โชว์หน้าที่เลือก
+            const selected = document.getElementById('section-' + sectionId);
+            if(selected) selected.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
